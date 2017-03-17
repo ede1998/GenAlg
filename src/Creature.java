@@ -8,15 +8,40 @@ public class Creature implements Comparable<Creature> {
     private static final int RESOLUTION = 15000;
     private static final double RANDOM_MUTATION_PROBABILITY = 0.03;
     private static final double MUTATION_DIVERGENCE = 0.2;
+    private static final int MAX_NODES = 10;
+    private static final int MAX_MUSCLES = 10;
     private Node[] nodes;
     private Muscle[] muscles;
     private ConnectionList connections;
 
 
-    public Creature(Node[] nodes, Muscle[] muscles, ConnectionList connections) {
+    private Creature(Node[] nodes, Muscle[] muscles, ConnectionList connections) {
         this.nodes = nodes;
         this.muscles = muscles;
         this.connections = connections;
+    }
+
+    public Creature() {
+       connections = new ConnectionList();
+       nodes = new Node[RandomNumberGenerator.randInt(MAX_NODES)];
+       muscles = new Muscle[RandomNumberGenerator.randInt(MAX_MUSCLES)];
+            for (int j = 0; j < nodes.length; j++){
+                nodes[j] = new Node(RandomNumberGenerator.random(), RandomNumberGenerator.random(0,Node.MAX_POS_X),
+                        RandomNumberGenerator.random(0, Node.MAX_POS_Y));
+            }
+            for (int k = 0; k < muscles.length; k++) {
+                int n1 = 0, n2 = 0;
+                while (n1 == n2) {
+                    n1 = RandomNumberGenerator.randInt(nodes.length);
+                    n2 = RandomNumberGenerator.randInt(nodes.length);
+                }
+                final double length = nodes[n1].getDistance(nodes[n2]);
+                muscles[k] = new Muscle(length - RandomNumberGenerator.random(length),
+                        length + RandomNumberGenerator.random(Muscle.MAX_MUSCLE_LENGTH - length),
+                        RandomNumberGenerator.random(), RandomNumberGenerator.random());
+                connections.add(nodes[n1], muscles[k]);
+                connections.add(nodes[n2], muscles[k]);
+            }
     }
 
     public double getPositionX() {

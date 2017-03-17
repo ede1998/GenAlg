@@ -8,8 +8,6 @@ import java.util.Collections;
 public class Generation {
     private ArrayList<Creature> walkers;
     private static final int TIME = 15;
-    private static final int MAX_NODES = 10;
-    private static final int MAX_MUSCLES = 10;
     private static final double DEATH_PERCENTAGE = 0.2;
     private static final double RANDOM_DEATH_PROBABILITY = 0.02;
 
@@ -41,31 +39,7 @@ public class Generation {
 
     private void createFromScratch(int walkersToMake) {
         walkers = new ArrayList<Creature>(walkersToMake);
-        Muscle[] muscles;
-        Node[] nodes;
-       ConnectionList connections = new ConnectionList();
-        for (int i = 0; i < walkersToMake; i++) {
-            nodes = new Node[RandomNumberGenerator.randInt(MAX_NODES)];
-            muscles = new Muscle[RandomNumberGenerator.randInt(MAX_MUSCLES)];
-            for (int j = 0; j < nodes.length; j++){
-                nodes[j] = new Node(RandomNumberGenerator.random(), RandomNumberGenerator.random(0,Node.MAX_POS_X),
-                        RandomNumberGenerator.random(0, Node.MAX_POS_Y));
-            }
-            for (int k = 0; k < muscles.length; k++) {
-                int n1 = 0, n2 = 0;
-                while (n1 == n2) {
-                    n1 = RandomNumberGenerator.randInt(nodes.length);
-                    n2 = RandomNumberGenerator.randInt(nodes.length);
-                }
-                final double length = nodes[n1].getDistance(nodes[n2]);
-                muscles[k] = new Muscle(length - RandomNumberGenerator.random(length),
-                        length + RandomNumberGenerator.random(Muscle.MAX_MUSCLE_LENGTH - length),
-                        RandomNumberGenerator.random(), RandomNumberGenerator.random());
-                connections.add(nodes[n1], muscles[k]);
-                connections.add(nodes[n2], muscles[k]);
-            }
-            walkers.add(new Creature(nodes, muscles, connections));
-        }
+        walkers.forEach((Creature c) -> c = new Creature());
     }
 
     private void live() {
