@@ -4,7 +4,6 @@
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Map;
 
 public class Generation {
     private ArrayList<Creature> walkers;
@@ -25,8 +24,8 @@ public class Generation {
         doGeneration();
     }
 
-    public Generation(int walkerstomake) {
-        createFromScratch(walkerstomake);
+    public Generation(int walkersToMake) {
+        createFromScratch(walkersToMake);
         doGeneration();
     }
 
@@ -40,28 +39,30 @@ public class Generation {
         return walkers.get(index);
     }
 
-    private void createFromScratch(int walkerstomake) {
-        walkers = new ArrayList<Creature>(walkerstomake);
+    private void createFromScratch(int walkersToMake) {
+        walkers = new ArrayList<Creature>(walkersToMake);
         Muscle[] muscles;
         Node[] nodes;
        ConnectionList connections = new ConnectionList();
-        for (int i = 0; i < walkerstomake; i++) {
-            nodes = new Node[RandomNumberGenerator.randint(MAX_NODES)];
-            muscles = new Muscle[RandomNumberGenerator.randint(MAX_MUSCLES)];
+        for (int i = 0; i < walkersToMake; i++) {
+            nodes = new Node[RandomNumberGenerator.randInt(MAX_NODES)];
+            muscles = new Muscle[RandomNumberGenerator.randInt(MAX_MUSCLES)];
             for (int j = 0; j < nodes.length; j++){
                 nodes[j] = new Node(RandomNumberGenerator.random(), RandomNumberGenerator.random(0,Node.MAX_POS_X),
                         RandomNumberGenerator.random(0, Node.MAX_POS_Y));
-            }//TODO connections init
+            }
             for (int k = 0; k < muscles.length; k++) {
                 int n1 = 0, n2 = 0;
                 while (n1 == n2) {
-                    n1 = RandomNumberGenerator.randint(nodes.length);
-                    n2 = RandomNumberGenerator.randint(nodes.length);
+                    n1 = RandomNumberGenerator.randInt(nodes.length);
+                    n2 = RandomNumberGenerator.randInt(nodes.length);
                 }
                 final double length = nodes[n1].getDistance(nodes[n2]);
                 muscles[k] = new Muscle(length - RandomNumberGenerator.random(length),
                         length + RandomNumberGenerator.random(Muscle.MAX_MUSCLE_LENGTH - length),
-                        RandomNumberGenerator.random(), RandomNumberGenerator.random(), n1, n2);
+                        RandomNumberGenerator.random(), RandomNumberGenerator.random());
+                connections.add(nodes[n1], muscles[k]);
+                connections.add(nodes[n2], muscles[k]);
             }
             walkers.add(new Creature(nodes, muscles, connections));
         }
@@ -72,28 +73,28 @@ public class Generation {
     }
 
     private void naturalSelect() {
-        int deathcount = 0;
-        final int totaldead = (int) Math.round(DEATH_PERCENTAGE * walkers.size());
+        int deathCount = 0;
+        final int totalDead = (int) Math.round(DEATH_PERCENTAGE * walkers.size());
         //kill some random creatures
         for (int i = 0; i < walkers.size(); i++) {
-            if (RandomNumberGenerator.randbool(RANDOM_DEATH_PROBABILITY)){
-                deathcount++;
+            if (RandomNumberGenerator.randBool(RANDOM_DEATH_PROBABILITY)){
+                deathCount++;
                 walkers.remove(i);
-                if (deathcount >= totaldead)
+                if (deathCount >= totalDead)
                     break;
             }
         }
         //kill worst creatures
-        for (int i = walkers.size() - 1; deathcount <= totaldead; i--) {
-            deathcount++;
+        for (int i = walkers.size() - 1; deathCount <= totalDead; i--) {
+            deathCount++;
             walkers.remove(i);
         }
     }
 
     private void mutate() {
-        final int totaldead = (int) Math.round(DEATH_PERCENTAGE * walkers.size());
+        final int totalDead = (int) Math.round(DEATH_PERCENTAGE * walkers.size());
         Creature c;
-        for (int i = 0; i <= totaldead; i++) {
+        for (int i = 0; i <= totalDead; i++) {
             c = walkers.get(i).clone();
             c.mutate();
             walkers.add(c);

@@ -12,7 +12,7 @@ public class Main {
             try {
                 Thread.sleep(100);
             }
-            catch (InterruptedException a) {};
+            catch (InterruptedException a) {}
             window.Draw();
         }
     }

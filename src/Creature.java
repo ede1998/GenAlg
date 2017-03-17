@@ -1,17 +1,16 @@
 import java.util.ArrayList;
-import java.util.Map;
 
 /**
  * Created by 152863eh on 14.03.2017.
  */
 
-public class Creature implements Comparable<Creature>{
-    private Node[] nodes;
-    private Muscle[] muscles;
-    private ConnectionList connections;
+public class Creature implements Comparable<Creature> {
     private static final int RESOLUTION = 15000;
     private static final double RANDOM_MUTATION_PROBABILITY = 0.03;
     private static final double MUTATION_DIVERGENCE = 0.2;
+    private Node[] nodes;
+    private Muscle[] muscles;
+    private ConnectionList connections;
 
 
     public Creature(Node[] nodes, Muscle[] muscles, ConnectionList connections) {
@@ -42,62 +41,60 @@ public class Creature implements Comparable<Creature>{
         return muscles;
     }
 
-    public void move(int time){
+    public void move(int time) {
+        if (time <= 0) throw new IllegalArgumentException("Time to try must be greater than 0.");
         for (int i = 0; i < time; i++)
             tryToMove();
     }
 
     public void reset() {
-        for (Node n: nodes)
+        for (Node n : nodes)
             n.reset();
     }
 
     private void tryToMove() {
         //TODO hope that works
-        if (RESOLUTION <= 0) throw new IllegalArgumentException("Time to try must be greater than 0.");
         double n1px = 0, n1py = 0, n2py = 0, n2px = 0;
-        for (int clock = 0; clock < RESOLUTION; clock++)
-        {
-            for (Muscle muscle: muscles) {
-                double prevlen = muscle.getLength();
-                muscle.tenseOrRelease(clock/ RESOLUTION);
-                double deltalen = muscle.getLength() - prevlen;
-                double angle = Math.asin(Math.abs(nodes[muscle.getNode1()].getPositionY() - nodes[muscle.getNode2()].getPositionY()) /prevlen);
-                if (nodes[muscle.getNode1()].getPositionY() == 0) {
-                    if (nodes[muscle.getNode2()].getPositionY() == 0) { //both on ground
+        for (int clock = 0; clock < RESOLUTION; clock++) {
+            for (Muscle muscle : muscles) {
+                ArrayList<Node> con = connections.getNodes(muscle);
+                double prevLen = muscle.getLength();
+                muscle.tenseOrRelease(clock / RESOLUTION);
+                double deltaLen = muscle.getLength() - prevLen;
+                double angle = Math.asin(Math.abs(con.get(0).getPositionY() - con.get(1).getPositionY()) / prevLen);
+                if (con.get(0).getPositionY() == 0) {
+                    if (con.get(1).getPositionY() == 0) { //both on ground
                         //depends on friction, only x, angle = 0
-                        n2px = nodes[muscle.getNode2()].getFriction() / (nodes[muscle.getNode2()].getFriction() + nodes[muscle.getNode1()].getFriction())
-                                * deltalen;
-                        n1px = nodes[muscle.getNode1()].getFriction() / (nodes[muscle.getNode2()].getFriction() + nodes[muscle.getNode1()].getFriction())
-                                * deltalen;
+                        n2px = con.get(1).getFriction() / (con.get(1).getFriction() + con.get(0).getFriction())
+                                * deltaLen;
+                        n1px = con.get(0).getFriction() / (con.get(1).getFriction() + con.get(0).getFriction())
+                                * deltaLen;
 
                     } else { //node 1 on ground, node 2 in air
                         //node2 moves in x, node1 not; both in y
-                        n2px = Math.sin(angle) * deltalen;
-                        n2py = Math.cos(angle) * deltalen / 2;
+                        n2px = Math.sin(angle) * deltaLen;
+                        n2py = Math.cos(angle) * deltaLen / 2;
                         n1py = n2py;
                     }
-                }
-                else {
-                    if (nodes[muscle.getNode2()].getPositionY() == 0) { //node1 in air, node2 on ground
+                } else {
+                    if (con.get(1).getPositionY() == 0) { //node1 in air, node2 on ground
                         //node1 moves in x, node2 not; both in y
-                        n1px = Math.sin(angle) * deltalen;
-                        n2py = Math.cos(angle) * deltalen / 2;
+                        n1px = Math.sin(angle) * deltaLen;
+                        n2py = Math.cos(angle) * deltaLen / 2;
                         n1py = n2py;
-                    }
-                    else { //both in air
+                    } else { //both in air
                         //both move in x and y
-                        n2px = Math.sin(angle) * deltalen / 2;
+                        n2px = Math.sin(angle) * deltaLen / 2;
                         n1px = n2px;
-                        n2py = Math.cos(angle) * deltalen / 2;
+                        n2py = Math.cos(angle) * deltaLen / 2;
                         n1py = n2py;
                     }
                 }
-                nodes[muscle.getNode1()].movePosition(n1px, n1py);
-                nodes[muscle.getNode2()].movePosition(n2px, n2py);
+                con.get(0).movePosition(n1px, n1py);
+                con.get(1).movePosition(n2px, n2py);
                 //TODO prevent form slipping in ground y < 0!
             }
-            for (Node n: nodes) {
+            for (Node n : nodes) {
                 n.forceMovement();
             }
         }
@@ -107,14 +104,14 @@ public class Creature implements Comparable<Creature>{
     public Creature clone() {
         Node[] n = new Node[nodes.length];
         Muscle[] m = new Muscle[muscles.length];
-        ConnectionList c =  new ConnectionList();
+        ConnectionList c = new ConnectionList();
 
         c.addAll(connections);
         for (int i = 0; i < nodes.length; i++)
             n[i] = nodes[i].clone();
         for (int i = 0; i < muscles.length; i++)
             m[i] = muscles[i].clone();
-        return new Creature(n,m, c);
+        return new Creature(n, m, c);
     }
 
     @Override //this<other => -1
@@ -129,95 +126,86 @@ public class Creature implements Comparable<Creature>{
     }
 
     public void mutate() {
-        for (int i = 0; i < nodes.length; i++)
-            nodes[i].mutate(MUTATION_DIVERGENCE);
-        for (int i = 0; i < muscles.length; i++)
-            muscles[i].mutate(MUTATION_DIVERGENCE, nodes[muscles[i].getNode1()]);//TODO Update index
-        if (RandomNumberGenerator.randbool(RANDOM_MUTATION_PROBABILITY))
-            switch (RandomNumberGenerator.randint(1)) {
+        for (Node n: nodes)
+            n.mutate(MUTATION_DIVERGENCE);
+        for (Muscle m: muscles) {
+            ArrayList<Node> con = connections.getNodes(m);
+            m.mutate(MUTATION_DIVERGENCE, con.get(0).getDistance(con.get(1)));
+        }
+        if (RandomNumberGenerator.randBool(RANDOM_MUTATION_PROBABILITY))
+            switch (RandomNumberGenerator.randInt(1)) {
                 case 0: //Node
-                    nodeMutation(RandomNumberGenerator.randint(1));
+                    nodeMutation(RandomNumberGenerator.randInt(1));
                     break;
                 case 1: //Muscle
-                    muscleMutation(RandomNumberGenerator.randint(1));
+                    muscleMutation(RandomNumberGenerator.randInt(1));
                     break;
             }
     }
 
-    private void nodeMutation(int doAdd) {
-        Node[] tmpnode;
-         switch (doAdd) {
-             case 0:
-                 tmpnode = new Node[nodes.length + 1];
-                 for (int i = 0; i < nodes.length; i++) {
-                     tmpnode[i] = nodes[i];
-                 }
-                 tmpnode[nodes.length] = new Node(RandomNumberGenerator.random(), RandomNumberGenerator.random(0,Node.MAX_POS_X),
-                         RandomNumberGenerator.random(0, Node.MAX_POS_Y));
-                 break;
-             default:
-                 tmpnode = new Node[nodes.length - 1];
-                 final int todelete = RandomNumberGenerator.randint(nodes.length - 1);
-                 for (int i = 0; i < todelete; i++) {
-                     tmpnode[i] = nodes[i];
-                 }
-                 for (int i = todelete + 1; i < tmpnode.length; i++) {
-                     tmpnode[i] = nodes[i - 1];
-                 }
-                 break;
+    private void nodeMutation(int doAdd) {//TODO need additional muscle, implement these method different
+        Node[] tmpNode;
+        switch (doAdd) {
+            case 0:
+                tmpNode = new Node[nodes.length + 1];
+                System.arraycopy(nodes, 0, tmpNode, 0, nodes.length);
+                tmpNode[nodes.length] = new Node(RandomNumberGenerator.random(), RandomNumberGenerator.random(0, Node.MAX_POS_X),
+                        RandomNumberGenerator.random(0, Node.MAX_POS_Y));
+                break;
+            default:
+                tmpNode = new Node[nodes.length - 1];
+                final int toDelete = RandomNumberGenerator.randInt(nodes.length - 1);
+                System.arraycopy(nodes, 0, tmpNode, 0, toDelete);
+                System.arraycopy(nodes, toDelete + 1 - 1, tmpNode, toDelete + 1, tmpNode.length - (toDelete + 1)); //TODO check if this works
+                break;
         }
-        nodes = tmpnode;
+        nodes = tmpNode;
     }
 
     private void muscleMutation(int doAdd) {
-        Muscle[] tmpmuscle;
+        Muscle[] tmpMuscle;
         switch (doAdd) {
             case 0:
-                tmpmuscle = new Muscle[muscles.length + 1];
-                for (int i = 0; i < muscles.length; i++) {
-                    tmpmuscle[i] = muscles[i];
-                }
+                tmpMuscle = new Muscle[muscles.length + 1];
+                System.arraycopy(muscles, 0, tmpMuscle, 0, muscles.length);
                 int n1 = 0, n2 = 0;
                 while (n1 == n2) {
-                    n1 = RandomNumberGenerator.randint(nodes.length);
-                    n2 = RandomNumberGenerator.randint(nodes.length);
+                    n1 = RandomNumberGenerator.randInt(nodes.length);
+                    n2 = RandomNumberGenerator.randInt(nodes.length);
                 }
                 final double length = nodes[n1].getDistance(nodes[n2]);
-                tmpmuscle[muscles.length] = new Muscle(length - RandomNumberGenerator.random(length),
+                tmpMuscle[muscles.length] = new Muscle(length - RandomNumberGenerator.random(length),
                         length + RandomNumberGenerator.random(Muscle.MAX_MUSCLE_LENGTH - length),
-                        RandomNumberGenerator.random(), RandomNumberGenerator.random(), n1, n2);
-                //todo
+                        RandomNumberGenerator.random(), RandomNumberGenerator.random());
+                //TODO node connection!
                 break;
             default:
-                tmpmuscle = new Muscle[muscles.length - 1];
-                final int todelete = RandomNumberGenerator.randint(muscles.length - 1);
-                for (int i = 0; i < todelete; i++) {
-                    tmpmuscle[i] = muscles[i];
-                }
-                for (int i = todelete + 1; i < tmpmuscle.length; i++) {
-                    tmpmuscle[i] = muscles[i - 1];
-                }
+                tmpMuscle = new Muscle[muscles.length - 1];
+                final int toDelete = RandomNumberGenerator.randInt(muscles.length - 1);
+                System.arraycopy(muscles, 0, tmpMuscle, 0, toDelete);
+                System.arraycopy(muscles, toDelete + 1 - 1, tmpMuscle, toDelete + 1, tmpMuscle.length - (toDelete + 1)); //TODO check if ths works
                 break;
         }
-        muscles = tmpmuscle;
+        muscles = tmpMuscle;
     }
 }
 
 class Muscle {
-   // private double strength;
+    public static final double MAX_MUSCLE_LENGTH = 12;
+    // private double strength;
     private double contractedLength;
     private double extendedLength;
     private double timeContractionStart;
     private double timeExtensionStart;
     private double length;
-    public static final double MAX_MUSCLE_LENGTH = 12;
 
     public Muscle(double contractedLength, double extendedLength, double timeContractionStart, double timeExtensionStart) {
 
         //this.strength = strength;
         this.contractedLength = contractedLength;
         this.extendedLength = extendedLength;
-        if (contractedLength > extendedLength) throw new IllegalArgumentException("Extended muscle must be longer than contracted muscle.");
+        if (contractedLength > extendedLength)
+            throw new IllegalArgumentException("Extended muscle must be longer than contracted muscle.");
         if ((timeContractionStart < 0) || (timeContractionStart > 1)) {
             throw new IllegalArgumentException("timeContractionStart must be between 0 and 1.");
         }
@@ -234,65 +222,54 @@ class Muscle {
 
     public double getLength() {
         return length;
+        //TODO make sure length is initialized before first call
     }
 
-    public void tenseOrRelease(double timeQuotient){
+    public void tenseOrRelease(double timeQuotient) {
         length = calcLengthQuotient(timeQuotient) * (extendedLength - contractedLength) + contractedLength;
     }
 
     private double calcLengthQuotient(double timeQuotient) {
-        if ((timeQuotient > 1) || (timeQuotient < 0)) throw new IllegalArgumentException("timeQuotient must be between 0 and 1.");
+        if ((timeQuotient > 1) || (timeQuotient < 0))
+            throw new IllegalArgumentException("timeQuotient must be between 0 and 1.");
         //equal to contraction
         if (timeQuotient == timeContractionStart) {
             return 1;
         }
         // equal to extension
-        else if (timeQuotient == timeExtensionStart){
+        else if (timeQuotient == timeExtensionStart) {
             return 0;
         }
         //smaller than both
         else if ((timeQuotient < timeExtensionStart) && (timeQuotient < timeContractionStart)) {
             //it's contraction time
-            if (timeExtensionStart < timeContractionStart)
+            if (timeExtensionStart < timeContractionStart) {
+                return (1 - timeContractionStart + timeQuotient) / (1 - (timeContractionStart - timeExtensionStart));
+            } else //C < E => it's extension time
             {
-                return (1 - timeContractionStart + timeQuotient)/(1-(timeContractionStart-timeExtensionStart));
-            }
-            else //C < E => it's extension time
-            {
-                return (1 - timeExtensionStart + timeQuotient)/(1-(timeExtensionStart-timeContractionStart));
+                return (1 - timeExtensionStart + timeQuotient) / (1 - (timeExtensionStart - timeContractionStart));
             }
         }
         //larger than both
         else if ((timeQuotient > timeExtensionStart) && (timeQuotient > timeContractionStart)) {
             //it's contraction time
-            if (timeExtensionStart < timeContractionStart)
+            if (timeExtensionStart < timeContractionStart) {
+                return (timeQuotient - timeContractionStart) / (1 - (timeContractionStart - timeExtensionStart));
+            } else //C < E => it's extension time
             {
-                return (timeQuotient - timeContractionStart)/(1-(timeContractionStart-timeExtensionStart));
-            }
-            else //C < E => it's extension time
-            {
-                return (timeQuotient - timeExtensionStart)/(1-(timeExtensionStart-timeContractionStart));
+                return (timeQuotient - timeExtensionStart) / (1 - (timeExtensionStart - timeContractionStart));
             }
         }
         //between both
-        else
-        {
+        else {
             //it's contraction time
-            if (timeExtensionStart < timeContractionStart)
-            {
+            if (timeExtensionStart < timeContractionStart) {
                 return (timeQuotient - timeExtensionStart) / (timeContractionStart - timeExtensionStart);
-            }
-            else //C < E => it's extension time
+            } else //C < E => it's extension time
             {
                 return 1 - ((timeQuotient - timeContractionStart) / (timeExtensionStart - timeContractionStart));
             }
         }
-    }
-
-    public int findConnectedNode(int otherNode) {
-        if (otherNode == node1) return node2;
-        if (otherNode == node2) return node1;
-        throw new IllegalArgumentException("No connection found.");
     }
 
     @Override
@@ -300,12 +277,12 @@ class Muscle {
         return new Muscle(contractedLength, extendedLength, timeContractionStart, timeExtensionStart);
     }
 
-    public void mutate(double divergence, double startingdist) {
+    public void mutate(double divergence, double startingDist) {
         contractedLength *= RandomNumberGenerator.randG(divergence, 1);
         extendedLength *= RandomNumberGenerator.randG(divergence, 1);
-        if (contractedLength > startingdist) contractedLength = startingdist;
-        if (extendedLength < startingdist) extendedLength = startingdist;
-        length = startingdist;
+        if (contractedLength > startingDist) contractedLength = startingDist;
+        if (extendedLength < startingDist) extendedLength = startingDist;
+        length = startingDist;
 
         timeContractionStart *= RandomNumberGenerator.randG(divergence, 1);
         while (timeContractionStart >= 1) timeContractionStart--;
@@ -317,26 +294,26 @@ class Muscle {
 }
 
 class Node {
+    public static final double MAX_POS_X = 10;
+    public static final double MAX_POS_Y = 10;
     private double friction;
     private double positionX;
     private double positionY;
     private double startPositionX;
     private double startPositionY;
     private double deltaX, deltaY;
-    public static final double MAX_POS_X = 10;
-    public static final double MAX_POS_Y = 10;
 
 
-    public Node(double friction, double posx, double posy) throws IllegalArgumentException {
+    public Node(double friction, double posX, double posY) throws IllegalArgumentException {
         if ((friction < 0) || (friction > 1))
             throw new IllegalArgumentException("Node friction must be between 0 and 1.");
         this.friction = friction;
-        this.positionX = posx;
-        this.startPositionX = posx;
-        if (posy < 0)
+        this.positionX = posX;
+        this.startPositionX = posX;
+        if (posY < 0)
             throw new IllegalArgumentException("Node must be above ground.");
-        this.positionY = posy;
-        this.startPositionY  = posy;
+        this.positionY = posY;
+        this.startPositionY = posY;
     }
 
     public double getFriction() {
@@ -375,9 +352,9 @@ class Node {
     }
 
     public double getDistance(Node n2) {
-        return Math.sqrt(Math.pow(this.getPositionX() - n2.getPositionX(),2) + Math.pow(this.getPositionY() - n2.getPositionY(),2));
+        return Math.sqrt(Math.pow(this.getPositionX() - n2.getPositionX(), 2) + Math.pow(this.getPositionY() - n2.getPositionY(), 2));
     }
-    
+
     public void mutate(double divergence) {
         startPositionY *= RandomNumberGenerator.randG(divergence, 1);
         if (startPositionY < 0)
@@ -406,6 +383,7 @@ class NodeMuscleMapping {
         return muscle;
     }
 }
+
 class ConnectionList extends ArrayList<NodeMuscleMapping> {
 
     public boolean add(Node node, Muscle muscle) {
@@ -421,12 +399,14 @@ class ConnectionList extends ArrayList<NodeMuscleMapping> {
         return muscle;
     }
 
-    public ArrayList<Node> getNode(Muscle muscle) {
+    public ArrayList<Node> getNodes(Muscle muscle) {
         ArrayList<Node> nodes = new ArrayList<Node>();
         this.forEach((NodeMuscleMapping m) -> {
             if (m.getMuscle() == muscle)
                 nodes.add(m.getNode());
         });
+        if (nodes.size() != 2)
+            throw new IllegalStateException();
         return nodes;
     }
 }

@@ -5,12 +5,12 @@ import java.util.Random;
 public class RandomNumberGenerator {
     private static Random rng = new Random();
 
-    public static int randint(int min, int max){
+    public static int randInt(int min, int max){
         if (max < min) throw new IllegalArgumentException("Max must be larger than min.");
         return (int) (Math.random() * (max - min + 1) + min);
     }
-    public static int randint(int max){
-        return randint(0, max);
+    public static int randInt(int max){
+        return randInt(0, max);
     }
     public static double random(){
         return Math.random();
@@ -23,7 +23,7 @@ public class RandomNumberGenerator {
         return Math.random() * (max - min) + min;
     }
 
-    public static boolean randbool(double probability) {
+    public static boolean randBool(double probability) {
         return random() < probability;
     }
 
@@ -31,11 +31,11 @@ public class RandomNumberGenerator {
         return rng.nextGaussian();
     }
 
-    public static double randG(double stddev, double shift) {
-        return randG() * stddev + shift;
+    public static double randG(double stdDev, double shift) {
+        return randG() * stdDev + shift;
     }
 
-    public static boolean randbool() {
+    public static boolean randBool() {
         return rng.nextBoolean();
     }
 }
