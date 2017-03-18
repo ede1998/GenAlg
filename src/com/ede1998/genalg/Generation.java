@@ -1,4 +1,4 @@
-/**
+package com.ede1998.genalg; /**
  * Created by 152863eh on 15.03.2017.
  */
 
@@ -65,8 +65,8 @@ public class Generation {
     }
 
     /**
-     *  This method kills a percentage of creatures specified by Generation.DEATH_PERCENTAGE.
-     *  Mostly, the worst performing creatures are killed but a couple of creatures also die randomly. This behaviour is controlled by the Generation.RANDOM_DEATH_PROBABILITY constant.
+     *  This method kills a percentage of creatures specified by com.ede1998.genalg.Generation.DEATH_PERCENTAGE.
+     *  Mostly, the worst performing creatures are killed but a couple of creatures also die randomly. This behaviour is controlled by the com.ede1998.genalg.Generation.RANDOM_DEATH_PROBABILITY constant.
      */
     private void naturalSelect() {
         int deathCount = 0;

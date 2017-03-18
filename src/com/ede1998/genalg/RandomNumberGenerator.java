@@ -1,4 +1,4 @@
-/**
+package com.ede1998.genalg; /**
  * Created by 152863eh on 15.03.2017.
  */
 import java.util.Random;

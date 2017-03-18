@@ -1,3 +1,5 @@
+package com.ede1998.genalg;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -63,7 +65,7 @@ public class Creature implements Comparable<Creature> {
     }
 
     /**
-     * This method calls trytoMove() time times, so it simulates a time span in which the creature can try to walk.
+     * This method calls tryToMove() time times, so it simulates a time span in which the creature can try to walk.
      * @param time number of repetitons of creature movement
      */
     public void move(int time) {
