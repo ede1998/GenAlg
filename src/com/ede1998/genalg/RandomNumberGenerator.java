@@ -1,4 +1,4 @@
-/**
+package com.ede1998.genalg; /**
  * Created by 152863eh on 15.03.2017.
  */
 import java.util.Random;
@@ -9,6 +9,12 @@ public class RandomNumberGenerator {
         if (max < min) throw new IllegalArgumentException("Max must be larger than min.");
         return (int) (Math.random() * (max - min + 1) + min);
     }
+
+    /**
+     * Pseudo-randomly generates an integer between 0 and max (including both) using Math.random.
+     * @param max maximum value
+     * @return pseudo-random number
+     */
     public static int randInt(int max){
         return randInt(0, max);
     }
