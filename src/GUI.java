@@ -34,6 +34,9 @@ public class GUI extends JFrame {
             graphics.setColor(makeColor(n.getFriction()));
             graphics.fillOval( convertToScreenX(n.getPositionX()) - NODE_RADIUS, convertToScreenY(n.getPositionY()) - NODE_RADIUS, 2 * NODE_RADIUS, 2 * NODE_RADIUS);
         }
+
+        graphics.setColor(Color.BLACK);
+        graphics.drawOval(convertToScreenX(creature.getPositionX()) - 5, convertToScreenY(creature.getPositionY()) - 5, 10, 10);
     }
 
     private Color makeColor(double percentage) {

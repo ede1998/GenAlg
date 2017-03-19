@@ -24,7 +24,7 @@ public class Creature implements Comparable<Creature> {
         this.connections = connections;
     }
 
-    public Creature() {
+    public Creature() { //TODO creature must be completely connected
         connections = new ConnectionList();
         nodes = new Node[RandomNumberGenerator.randInt(MAX_NODES)];
         muscles = new Muscle[RandomNumberGenerator.randInt(MAX_MUSCLES)];
