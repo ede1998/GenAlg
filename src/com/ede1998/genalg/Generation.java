@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class Generation {
-    private ArrayList<Creature> walkers;
+    private ArrayList<Creature> creatures;
     private static final int TIME = 15;
     private static final double DEATH_PERCENTAGE = 0.2;
     private static final double RANDOM_DEATH_PROBABILITY = 0.02;
@@ -21,8 +21,8 @@ public class Generation {
     public Generation(Generation prevGen) {
         if (prevGen == null) throw new IllegalArgumentException("Null pointer generation.");
         if (prevGen == this) throw new IllegalArgumentException("Previous generation is the current gen.");
-        walkers = new ArrayList<>(prevGen.walkers.size());
-        prevGen.walkers.forEach( (Creature w) -> walkers.add(w.clone()));
+        creatures = new ArrayList<>(prevGen.creatures.size());
+        prevGen.creatures.forEach( (Creature w) -> creatures.add(w.clone()));
         naturalSelect();
         mutate();
         doGeneration();
@@ -30,10 +30,10 @@ public class Generation {
 
     /**
      *  This constructor should be called for the first generation only as it creates all creatures randomly. Then these creatures are processed and evaluated.
-     * @param walkersToMake Specifies the number of creatures the generation has.
+     * @param creaturesToMake Specifies the number of creatures the generation has.
      */
-    public Generation(int walkersToMake) {
-        createFromScratch(walkersToMake);
+    public Generation(int creaturesToMake) {
+        createFromScratch(creaturesToMake);
         doGeneration();
     }
 
@@ -41,14 +41,14 @@ public class Generation {
      * This method processes all creatures and afterwards evaluates them sorting the creatures by their respective travel distance.
      */
     private void doGeneration() {
-        walkers.forEach((w)->w.reset());
+        creatures.forEach((Creature w) -> w.reset());
         live();
-        Collections.sort(walkers);
+        Collections.sort(creatures);
     }
     
     
-    public Creature getWalkerAt(int index) {
-        return walkers.get(index);
+    public Creature getCreatureAt(int index) {
+        return creatures.get(index);
     }
 
     /**
@@ -56,12 +56,12 @@ public class Generation {
      * @param walkersToMake Specifies the number of creatures the generation has.
      */
     private void createFromScratch(int walkersToMake) {
-        walkers = new ArrayList<Creature>(walkersToMake);
-        walkers.forEach((Creature c) -> c = new Creature());
+        creatures = new ArrayList<Creature>(walkersToMake);
+        creatures.forEach((Creature c) -> c = new Creature());
     }
 
     private void live() {//TODO add threads
-       walkers.forEach((w)-> w.move(TIME));
+       creatures.forEach((w)-> w.move(TIME));
     }
 
     /**
@@ -70,20 +70,20 @@ public class Generation {
      */
     private void naturalSelect() {
         int deathCount = 0;
-        final int totalDead = (int) Math.round(DEATH_PERCENTAGE * walkers.size());
+        final int totalDead = (int) Math.round(DEATH_PERCENTAGE * creatures.size());
         //kill some random creatures
-        for (int i = 0; i < walkers.size(); i++) {
+        for (int i = 0; i < creatures.size(); i++) {
             if (RandomNumberGenerator.randBool(RANDOM_DEATH_PROBABILITY)){
                 deathCount++;
-                walkers.remove(i);
+                creatures.remove(i);
                 if (deathCount >= totalDead)
                     break;
             }
         }
         //kill worst creatures
-        for (int i = walkers.size() - 1; deathCount <= totalDead; i--) {
+        for (int i = creatures.size() - 1; deathCount <= totalDead; i--) {
             deathCount++;
-            walkers.remove(i);
+            creatures.remove(i);
         }
     }
 
@@ -91,12 +91,12 @@ public class Generation {
      * For each creature that died from naturalSelect(), a new creature is created. It a clone of another already existing creature but its parameters are slightly altered.
      */
     private void mutate() {
-        final int totalDead = (int) Math.round(DEATH_PERCENTAGE * walkers.size());
+        final int totalDead = (int) Math.round(DEATH_PERCENTAGE * creatures.size());
         Creature c;
         for (int i = 0; i <= totalDead; i++) {
-            c = walkers.get(i).clone();
+            c = creatures.get(i).clone();
             c.mutate();
-            walkers.add(c);
+            creatures.add(c);
         }
     }
 }
