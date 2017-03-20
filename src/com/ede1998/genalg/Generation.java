@@ -1,11 +1,13 @@
-package com.ede1998.genalg; /**
+package com.ede1998.genalg;
+
+/**
  * Created by 152863eh on 15.03.2017.
  */
 
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class Generation {
+public class Generation implements Runnable {
     private ArrayList<Creature> creatures;
     private static final int TIME = 15;
     private static final double DEATH_PERCENTAGE = 0.2;
@@ -98,5 +100,11 @@ public class Generation {
             c.mutate();
             creatures.add(c);
         }
+    }
+
+    @Override
+    public void run() {
+        //TODO multithreading
+        //for loop and get() oder spliterator
     }
 }

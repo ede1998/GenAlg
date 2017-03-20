@@ -4,17 +4,17 @@ package com.ede1998.genalg;
  * Created by Erik on 19.03.2017.
  */
 public class Muscle {
-    private static final double MAX_MUSCLE_LENGTH = 12;
-    // private double strength;
+    private static final double MAX_LENGTH = 12;
+    private static final double MAX_STRENGTH = 10;
+    private double strength;
     private double contractedLength;
     private double extendedLength;
     private double timeContractionStart;
     private double timeExtensionStart;
     private double length;
 
-    private Muscle(double length, double contractedLength, double extendedLength, double timeContractionStart, double timeExtensionStart) {
-
-        //this.strength = strength;
+    private Muscle(double length, double contractedLength, double extendedLength, double timeContractionStart, double timeExtensionStart, double strength) {
+        this.strength = strength;
         this.contractedLength = contractedLength;
         this.extendedLength = extendedLength;
         if (contractedLength > extendedLength)
@@ -36,16 +36,49 @@ public class Muscle {
 
     public Muscle(double length) {
        this(length, length - RandomNumberGenerator.random(length),
-                        length + RandomNumberGenerator.random(Muscle.MAX_MUSCLE_LENGTH - length),
-                        RandomNumberGenerator.random(), RandomNumberGenerator.random());
+                        length + RandomNumberGenerator.random(Muscle.MAX_LENGTH - length),
+                        RandomNumberGenerator.random(), RandomNumberGenerator.random(), RandomNumberGenerator.random(MAX_STRENGTH));
     }
 
     public double getLength() {
         return length;
-        //TODO make sure length is initialized before first call
     }
 
-    public void tenseOrRelease(double timeQuotient) {
+    public void setLength(double length) {
+        this.length = length;
+    }
+
+    public double getStrength() {
+        return strength;
+    }
+
+    public boolean isContracted(double timeQuotient) {
+        if ((timeQuotient > 1) || (timeQuotient < 0))
+            throw new IllegalArgumentException("timeQuotient must be between 0 and 1.");
+        if (timeQuotient == timeContractionStart) {
+            return true;
+        }
+        // equal to extension
+        else if (timeQuotient == timeExtensionStart) {
+            return false;
+        }
+        //smaller than both
+        else if ((timeQuotient < timeExtensionStart) && (timeQuotient < timeContractionStart)) {
+            //it's contraction time
+            return timeExtensionStart < timeContractionStart;
+        }
+        //larger than both
+        else if ((timeQuotient > timeExtensionStart) && (timeQuotient > timeContractionStart)) {
+            //it's contraction time
+            return timeExtensionStart < timeContractionStart;
+        }
+        //between both
+        else {
+            //it's contraction time
+            return timeExtensionStart < timeContractionStart;
+        }
+    }
+    /*public void tenseOrRelease(double timeQuotient) {
         length = calcLengthQuotient(timeQuotient) * (extendedLength - contractedLength) + contractedLength;
     }
 
@@ -90,11 +123,11 @@ public class Muscle {
                 return 1 - ((timeQuotient - timeContractionStart) / (timeExtensionStart - timeContractionStart));
             }
         }
-    }
+    }*/
 
     @Override
     public Muscle clone() {
-        return new Muscle(length, contractedLength, extendedLength, timeContractionStart, timeExtensionStart);
+        return new Muscle(length, contractedLength, extendedLength, timeContractionStart, timeExtensionStart, strength);
     }
 
     public void mutate(double divergence, double startingDist) {
@@ -110,5 +143,7 @@ public class Muscle {
         timeExtensionStart *= RandomNumberGenerator.randG(divergence, 1);
         if (timeExtensionStart >= 1) timeExtensionStart--;
         if (timeExtensionStart < 0) timeExtensionStart++;
+
+        strength *= RandomNumberGenerator.randG(divergence, 1);
     }
 }

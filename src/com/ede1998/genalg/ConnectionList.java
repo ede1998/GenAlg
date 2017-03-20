@@ -56,6 +56,15 @@ public class ConnectionList extends ArrayList<ConnectionList.NodeMuscleMapping> 
         return nodes;
     }
 
+    public boolean connected(Node n1, Node n2) {
+        ArrayList<Muscle> m1 = getMuscle(n1), m2 = getMuscle(n2);
+        for (Muscle m : m1) {
+            if (m2.contains(m))
+                return true;
+        }
+        return false;
+    }
+
     static class NodeMuscleMapping {
         private final Node node;
         private final Muscle muscle;

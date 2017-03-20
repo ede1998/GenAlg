@@ -13,6 +13,7 @@ public class Creature implements Comparable<Creature> {
     private static final double MUTATION_DIVERGENCE = 0.2;
     private static final int MAX_NODES = 10;
     private static final int MAX_MUSCLES = 10;
+    private static final double MORE_NODES_PROBABILITY = 0.4;
     private Node[] nodes;
     private Muscle[] muscles;
     private ConnectionList connections;
@@ -24,16 +25,15 @@ public class Creature implements Comparable<Creature> {
         this.connections = connections;
     }
 
-    public Creature() { //TODO creature must be completely connected
+    public Creature() {
         connections = new ConnectionList();
-        nodes = new Node[RandomNumberGenerator.randInt(MAX_NODES)];
-        muscles = new Muscle[RandomNumberGenerator.randInt(MAX_MUSCLES)];
-        for (int j = 0; j < nodes.length; j++) {
-            nodes[j] = new Node();
-        }
-        for (int k = 0; k < muscles.length; k++) {
+        nodes = new Node[RandomNumberGenerator.randInt(MAX_NODES - 2) + 2];
+        muscles = new Muscle[nodes.length + RandomNumberGenerator.randInt(MAX_MUSCLES)];
+        makeCreature(0,0 , nodes.length, null);
+        for (int k = muscles.length - 1; k >= 0; k--) {
+            if (muscles[k] != null) break;
             int n1 = 0, n2 = 0;
-            while (n1 == n2) {
+            while (connections.connected(nodes[n1], nodes[n2])) {
                 n1 = RandomNumberGenerator.randInt(nodes.length - 1);
                 n2 = RandomNumberGenerator.randInt(nodes.length - 1);
             }
@@ -41,6 +41,23 @@ public class Creature implements Comparable<Creature> {
             connections.add(nodes[n1], muscles[k]);
             connections.add(nodes[n2], muscles[k]);
         }
+    }
+
+    private int makeCreature(int posN, int posM, int len, Node prevNode) {
+        nodes[posN] = new Node();
+        if (prevNode != null) {
+            muscles[posM] = new Muscle(prevNode.getDistance(nodes[posN]));
+            connections.add(nodes[posN], muscles[posM]);
+            connections.add(prevNode, muscles[posM]);
+            posM++;
+        }
+        if (posN < len - 1) {
+            do {
+                posN = makeCreature(posN + 1, posM, len, nodes[posN]);
+            }
+            while (RandomNumberGenerator.randBool(MORE_NODES_PROBABILITY) && (posN < len - 1));
+        }
+        return posN;
     }
 
     public double getPositionX() {
@@ -74,7 +91,7 @@ public class Creature implements Comparable<Creature> {
     public void move(int time) {
         if (time <= 0) throw new IllegalArgumentException("Time to try must be greater than 0.");
         for (int i = 0; i < time; i++)
-            tryToMove();
+            run();
     }
 
     public void reset() {
@@ -82,7 +99,7 @@ public class Creature implements Comparable<Creature> {
             n.reset();
     }
 
-    private void tryToMove() {
+    /*private void run() {
         //TODO hope that works
         double n1px = 0, n1py = 0, n2py = 0, n2px = 0;
         for (int clock = 0; clock < RESOLUTION; clock++) {
@@ -122,13 +139,29 @@ public class Creature implements Comparable<Creature> {
                 }
                 con.get(0).movePosition(n1px, n1py);
                 con.get(1).movePosition(n2px, n2py);
+                if (con.get(0).getNewPosY() < 0) {
+
+                }
                 //TODO prevent form slipping in ground y < 0!
             }
             for (Node n : nodes) {
                 n.forceMovement();
             }
         }
+    }*/
+
+    private void run() {
+        for (int clock = 0; clock < RESOLUTION; clock++) {
+            singleStep();
+        }
     }
+
+
+    private void singleStep() {
+
+    }
+
+
 
     @Override
     public Creature clone() {

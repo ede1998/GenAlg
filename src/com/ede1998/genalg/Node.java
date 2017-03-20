@@ -45,19 +45,32 @@ public class Node {
         return positionY;
     }
 
-    public void movePosition(double deltaX, double deltaY) {
+    /**
+     * This method adds the given parameters to an internal shift variable. To apply the shift, call forceMovement().
+     * @param deltaX shift in X direction
+     * @param deltaY shift in Y direction
+     */
+    void movePosition(double deltaX, double deltaY) {
         this.deltaX += deltaX;
         this.deltaY += deltaY;
     }
 
-    public void forceMovement() {
+    double getNewPosY() {
+        return positionY + deltaY;
+    }
+
+    double getNewPosX() {
+        return positionX + deltaX;
+    }
+
+    void forceMovement() {
         positionX += deltaX;
         positionY += deltaY;
         deltaX = 0;
         deltaY = 0;
     }
 
-    public void reset() {
+    void reset() {
         this.positionX = startPositionX;
         this.positionY = startPositionY;
         deltaX = deltaY = 0;
