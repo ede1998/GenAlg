@@ -1,4 +1,6 @@
-import com.ede1998.genalg.*;
+import com.ede1998.genalg.Creature;
+import com.ede1998.genalg.Muscle;
+import com.ede1998.genalg.Node;
 
 import javax.swing.*;
 import java.awt.*;
@@ -36,7 +38,7 @@ public class GUI extends JFrame {
         }
 
         graphics.setColor(Color.BLACK);
-        graphics.drawOval(convertToScreenX(creature.getPositionX()) - 5, convertToScreenY(creature.getPositionY()) - 5, 10, 10);
+        graphics.fillOval(convertToScreenX(creature.getPositionX()) - 5, convertToScreenY(creature.getPositionY()) - 5, 10, 10);
     }
 
     private Color makeColor(double percentage) {

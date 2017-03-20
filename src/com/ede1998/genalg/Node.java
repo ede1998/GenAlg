@@ -55,11 +55,11 @@ public class Node {
         this.deltaY += deltaY;
     }
 
-    double getNewPosY() {
+    double getNewPositionY() {
         return positionY + deltaY;
     }
 
-    double getNewPosX() {
+    double getNewPositionX() {
         return positionX + deltaX;
     }
 
@@ -106,5 +106,12 @@ public class Node {
 
     public int getConnections() {
         return connections;
+    }
+
+    public String toString() {
+        String s = "";
+        s += "  Friction: " + friction + "\n";
+        s += "  Position: (" + positionX + "|" + positionY + ")\n";
+        return s;
     }
 }

@@ -8,6 +8,7 @@ public class Main {
         GUI window = new GUI("Genetic Algorithm");
         window.setSize(1000, 600);
         Creature c = new Creature();
+        System.out.println(c.toString());
         while (true) {
             window.clear();
             for (int i = 0; i < 10; i++) {
@@ -17,6 +18,7 @@ public class Main {
                 catch (InterruptedException a) {}
                 window.drawCreature(c);
             }
-        c.move(1);}
+            c.move(1);
+        }
     }
 }

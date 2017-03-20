@@ -1,7 +1,6 @@
 package com.ede1998.genalg;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  * Created by 152863eh on 14.03.2017.
@@ -14,6 +13,7 @@ public class Creature implements Comparable<Creature> {
     private static final int MAX_NODES = 10;
     private static final int MAX_MUSCLES = 10;
     private static final double MORE_NODES_PROBABILITY = 0.4;
+    private static final double GRAVITY = 9.81;
     private Node[] nodes;
     private Muscle[] muscles;
     private ConnectionList connections;
@@ -33,7 +33,7 @@ public class Creature implements Comparable<Creature> {
         for (int k = muscles.length - 1; k >= 0; k--) {
             if (muscles[k] != null) break;
             int n1 = 0, n2 = 0;
-            while (connections.connected(nodes[n1], nodes[n2])) {
+            while (connections.connected(nodes[n1], nodes[n2])) { //TODO prevent infinite loop if nodes.length << muscles.length
                 n1 = RandomNumberGenerator.randInt(nodes.length - 1);
                 n2 = RandomNumberGenerator.randInt(nodes.length - 1);
             }
@@ -99,66 +99,54 @@ public class Creature implements Comparable<Creature> {
             n.reset();
     }
 
-    /*private void run() {
-        //TODO hope that works
-        double n1px = 0, n1py = 0, n2py = 0, n2px = 0;
-        for (int clock = 0; clock < RESOLUTION; clock++) {
-            for (Muscle muscle : muscles) {
-                ArrayList<Node> con = connections.getNodes(muscle);
-                double prevLen = muscle.getLength();
-                muscle.tenseOrRelease(clock / RESOLUTION);
-                double deltaLen = muscle.getLength() - prevLen;
-                double angle = Math.asin(Math.abs(con.get(0).getPositionY() - con.get(1).getPositionY()) / prevLen);
-                if (con.get(0).getPositionY() == 0) {
-                    if (con.get(1).getPositionY() == 0) { //both on ground
-                        //depends on friction, only x, angle = 0
-                        n2px = con.get(1).getFriction() / (con.get(1).getFriction() + con.get(0).getFriction())
-                                * deltaLen;
-                        n1px = con.get(0).getFriction() / (con.get(1).getFriction() + con.get(0).getFriction())
-                                * deltaLen;
-
-                    } else { //node 1 on ground, node 2 in air
-                        //node2 moves in x, node1 not; both in y
-                        n2px = Math.sin(angle) * deltaLen;
-                        n2py = Math.cos(angle) * deltaLen / 2;
-                        n1py = n2py;
-                    }
-                } else {
-                    if (con.get(1).getPositionY() == 0) { //node1 in air, node2 on ground
-                        //node1 moves in x, node2 not; both in y
-                        n1px = Math.sin(angle) * deltaLen;
-                        n2py = Math.cos(angle) * deltaLen / 2;
-                        n1py = n2py;
-                    } else { //both in air
-                        //both move in x and y
-                        n2px = Math.sin(angle) * deltaLen / 2;
-                        n1px = n2px;
-                        n2py = Math.cos(angle) * deltaLen / 2;
-                        n1py = n2py;
-                    }
-                }
-                con.get(0).movePosition(n1px, n1py);
-                con.get(1).movePosition(n2px, n2py);
-                if (con.get(0).getNewPosY() < 0) {
-
-                }
-                //TODO prevent form slipping in ground y < 0!
-            }
-            for (Node n : nodes) {
-                n.forceMovement();
-            }
-        }
-    }*/
-
     private void run() {
         for (int clock = 0; clock < RESOLUTION; clock++) {
-            singleStep();
+            singleStep((double) clock / RESOLUTION);
         }
     }
 
+    private void singleStep(double timeQuotient) {
+        ArrayList<Node> conN;
+        for (Node n : nodes) {
+            //apply effect of gravity
+            n.movePosition(0, GRAVITY * timeQuotient);
 
-    private void singleStep() {
+            //Calculate new position for each node
+            ArrayList<Muscle> conM = connections.getMuscle(n);
+            double totalStrength = 0;
+            for (Muscle m : conM)
+                totalStrength += m.getStrength();
+            for (Muscle m : conM) {
+                conN = connections.getNodes(m);
+                double deltaLength = (m.getTargetLength(timeQuotient) - m.getLength()) * m.getStrength() / totalStrength;
+                ;
+                double angle = Math.asin(Math.abs(conN.get(0).getPositionY() - conN.get(1).getPositionY()) / m.getLength());
+                n.movePosition(deltaLength * Math.cos(angle), deltaLength * Math.sin(angle));
+            }
 
+            //push nodes in ground up to surface
+            double newPositionY = n.getNewPositionY();
+            if (newPositionY < 0) {
+                n.movePosition(0, -newPositionY);
+                for (Muscle m : conM) {
+                    Node tmp;
+                    conN = connections.getNodes(m);
+                    if (conN.get(0) == n)
+                        tmp = conN.get(1);
+                    else
+                        tmp = conN.get(0);
+                    tmp.movePosition(0, -newPositionY);
+
+                }
+            }
+        }
+        for (Node n : nodes)
+            n.forceMovement();
+        //Update muscle lengths
+        for (Muscle m : muscles) {
+            conN = connections.getNodes(m);
+            m.changeLength(conN.get(0), conN.get(1));
+        }
     }
 
 
@@ -273,6 +261,20 @@ public class Creature implements Comparable<Creature> {
         System.arraycopy(muscles, 0, tmpMuscles, 0, toDelete);
         System.arraycopy(muscles, toDelete + 1 - 1, tmpMuscles, toDelete + 1, tmpMuscles.length - (toDelete + 1)); //TODO check if this works
         muscles = tmpMuscles;
+    }
+
+    public String toString() {
+        String s = "";
+        for (int i = 0; i < nodes.length; i++) {
+            s += "Node " + i + ":\n";
+            s += nodes[i].toString();
+        }
+        for (int i = 0; i < muscles.length; i++) {
+            s += "Muscle " + i + ":\n";
+            s += muscles[i].toString();
+        }
+        s += connections.toString();
+        return s;
     }
 }
 

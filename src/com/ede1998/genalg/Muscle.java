@@ -44,8 +44,9 @@ public class Muscle {
         return length;
     }
 
-    public void setLength(double length) {
-        this.length = length;
+    public void changeLength(Node n1, Node n2) {
+        if (n1 == n2) throw new IllegalArgumentException("Nodes must be different.");
+        this.length = n1.getDistance(n2);
     }
 
     public double getStrength() {
@@ -78,52 +79,12 @@ public class Muscle {
             return timeExtensionStart < timeContractionStart;
         }
     }
-    /*public void tenseOrRelease(double timeQuotient) {
-        length = calcLengthQuotient(timeQuotient) * (extendedLength - contractedLength) + contractedLength;
-    }
 
-    private double calcLengthQuotient(double timeQuotient) {
-        if ((timeQuotient > 1) || (timeQuotient < 0))
-            throw new IllegalArgumentException("timeQuotient must be between 0 and 1.");
-        //equal to contraction
-        if (timeQuotient == timeContractionStart) {
-            return 1;
-        }
-        // equal to extension
-        else if (timeQuotient == timeExtensionStart) {
-            return 0;
-        }
-        //smaller than both
-        else if ((timeQuotient < timeExtensionStart) && (timeQuotient < timeContractionStart)) {
-            //it's contraction time
-            if (timeExtensionStart < timeContractionStart) {
-                return (1 - timeContractionStart + timeQuotient) / (1 - (timeContractionStart - timeExtensionStart));
-            } else //C < E => it's extension time
-            {
-                return (1 - timeExtensionStart + timeQuotient) / (1 - (timeExtensionStart - timeContractionStart));
-            }
-        }
-        //larger than both
-        else if ((timeQuotient > timeExtensionStart) && (timeQuotient > timeContractionStart)) {
-            //it's contraction time
-            if (timeExtensionStart < timeContractionStart) {
-                return (timeQuotient - timeContractionStart) / (1 - (timeContractionStart - timeExtensionStart));
-            } else //C < E => it's extension time
-            {
-                return (timeQuotient - timeExtensionStart) / (1 - (timeExtensionStart - timeContractionStart));
-            }
-        }
-        //between both
-        else {
-            //it's contraction time
-            if (timeExtensionStart < timeContractionStart) {
-                return (timeQuotient - timeExtensionStart) / (timeContractionStart - timeExtensionStart);
-            } else //C < E => it's extension time
-            {
-                return 1 - ((timeQuotient - timeContractionStart) / (timeExtensionStart - timeContractionStart));
-            }
-        }
-    }*/
+    public double getTargetLength(double timeQuotient) {
+        if (isContracted(timeQuotient))
+            return contractedLength;
+        else return extendedLength;
+    }
 
     @Override
     public Muscle clone() {
@@ -145,5 +106,13 @@ public class Muscle {
         if (timeExtensionStart < 0) timeExtensionStart++;
 
         strength *= RandomNumberGenerator.randG(divergence, 1);
+    }
+
+    public String toString() {
+        String s = "";
+        s += "  Strength: " + strength + "\n";
+        s += "  length(contracted|extended): " + length + "(" + contractedLength + "|" + extendedLength + ")\n";
+        s += "  contractedTime|extendedTime: " + timeContractionStart + "|" + timeExtensionStart + "\n";
+        return s;
     }
 }

@@ -65,6 +65,7 @@ public class ConnectionList extends ArrayList<ConnectionList.NodeMuscleMapping> 
         return false;
     }
 
+
     static class NodeMuscleMapping {
         private final Node node;
         private final Muscle muscle;
